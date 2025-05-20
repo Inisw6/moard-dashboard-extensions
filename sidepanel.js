@@ -81,20 +81,34 @@ function displayContent(items) {
   const youtubeContainer = document.getElementById('youtube-container');
   youtubeContainer.innerHTML = '';
   
-  const youtubeItems = items.filter(item => item.type === 'youtube');
-  if (youtubeItems.length > 0) {
-    const video = youtubeItems[0];
-    const embedContainer = document.createElement('div');
-    embedContainer.className = 'embed-container';
+  const youtubeItems = items.filter(item => item.type === 'youtube').slice(0, 2); // 최대 2개 영상 표시
+  youtubeItems.forEach(video => {
+    const videoCard = document.createElement('div');
+    videoCard.className = 'youtube-card';
     
-    const iframe = document.createElement('iframe');
-    iframe.src = `https://www.youtube.com/embed/${video.url.split('v=')[1]}`;
-    iframe.frameBorder = '0';
-    iframe.allowFullscreen = true;
+    // YouTube 영상 ID 추출
+    const videoId = video.url.split('v=')[1];
+    const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
     
-    embedContainer.appendChild(iframe);
-    youtubeContainer.appendChild(embedContainer);
-  }
+    videoCard.innerHTML = `
+      <a href="${video.url}" target="_blank" class="youtube-link">
+        <div class="thumbnail-container">
+          <img src="${thumbnailUrl}" alt="${video.title}" class="thumbnail">
+          <div class="play-button">▶</div>
+        </div>
+        <div class="video-info">
+          <h3 class="video-title">${video.title}</h3>
+        </div>
+      </a>
+    `;
+    
+    // 클릭 이벤트 추가
+    videoCard.addEventListener('click', () => {
+      handleContentClick(video.id, 'youtube', video.url);
+    });
+    
+    youtubeContainer.appendChild(videoCard);
+  });
 
   // 뉴스 콘텐츠 표시
   const newsContainer = document.getElementById('news-container');

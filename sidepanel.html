@@ -154,6 +154,77 @@
     .content-type.blog {
       background-color: #34a853;
     }
+
+    .youtube-card {
+      margin-bottom: 16px;
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: var(--background-primary);
+      transition: transform 0.2s ease;
+    }
+
+    .youtube-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .youtube-link {
+      text-decoration: none;
+      color: var(--text-primary);
+      display: block;
+    }
+
+    .thumbnail-container {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 비율 */
+      background-color: #000;
+    }
+
+    .thumbnail {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .play-button {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 48px;
+      height: 48px;
+      background-color: rgba(0, 0, 0, 0.7);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+      transition: background-color 0.2s ease;
+    }
+
+    .youtube-card:hover .play-button {
+      background-color: #ff0000;
+    }
+
+    .video-info {
+      padding: 12px;
+    }
+
+    .video-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   </style>
 </head>
 <body>
