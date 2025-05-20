@@ -6,7 +6,8 @@
   "permissions": [
     "sidePanel",
     "tabs",
-    "scripting"
+    "scripting",
+    "storage"
   ],
   "host_permissions": [
     "https://finance.naver.com/*"
