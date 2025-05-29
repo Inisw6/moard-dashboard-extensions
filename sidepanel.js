@@ -28,8 +28,19 @@ async function checkUserExists(uuid) {
       throw new Error('사용자 확인 중 오류가 발생했습니다');
     }
     
-    const data = await response.json();
-    return data !== null;
+    // 응답이 비어있는 경우 처리
+    const text = await response.text();
+    if (!text) {
+      return false;
+    }
+    
+    try {
+      const data = JSON.parse(text);
+      return data !== null;
+    } catch (parseError) {
+      console.error('JSON 파싱 오류:', parseError);
+      return false;
+    }
   } catch (error) {
     console.error('사용자 확인 중 오류 발생:', error);
     return false;
@@ -108,16 +119,54 @@ async function sendAnalyticsData(data) {
   }
 }
 
+// 사용자 로그 데이터 전송 함수
+async function sendUserLog(eventType, contentId) {
+  try {
+    if (!clientUid) {
+      await new Promise(resolve => {
+        const checkUid = setInterval(() => {
+          if (clientUid) {
+            clearInterval(checkUid);
+            resolve();
+          }
+        }, 100);
+      });
+    }
+
+    const logData = {
+      userId: clientUid,
+      eventType: eventType,
+      contentId: contentId,
+      timestamp: new Date().toISOString()
+    };
+
+    const response = await fetch('http://localhost:8080/api/v1/user-log', {
+      method: 'POST',
+      headers: {
+        'accept': '*/*',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(logData)
+    });
+
+    if (!response.ok) {
+      throw new Error('로그 데이터 전송 실패');
+    }
+  } catch (error) {
+    console.error('로그 데이터 전송 중 오류 발생:', error);
+  }
+}
+
 // 콘텐츠 클릭 이벤트 핸들러
 function handleContentClick(contentId, contentType, url) {
   const clickData = {
     content_id: contentId,
     clicked: true,
-    dwell_time_seconds: 0,
     logged_at: new Date().toISOString()
   };
   
   sendAnalyticsData(clickData);
+  sendUserLog('CLICK', contentId);
 }
 
 function displayContent(items) {
@@ -125,7 +174,7 @@ function displayContent(items) {
   const youtubeContainer = document.getElementById('youtube-container');
   youtubeContainer.innerHTML = '';
   
-  const youtubeItems = items.filter(item => item.type === 'YOUTUBE').slice(0, 2); // 최대 2개 영상 표시
+  const youtubeItems = items.filter(item => item.type === 'YOUTUBE').slice(0, 2);
   youtubeItems.forEach(video => {
     const videoCard = document.createElement('div');
     videoCard.className = 'youtube-card';
@@ -143,7 +192,6 @@ function displayContent(items) {
       </a>
     `;
     
-    // 클릭 이벤트 추가
     videoCard.addEventListener('click', () => {
       handleContentClick(video.id, 'YOUTUBE', video.url);
     });
@@ -159,6 +207,7 @@ function displayContent(items) {
   newsItems.forEach(item => {
     const newsCard = document.createElement('div');
     newsCard.className = 'news-card';
+    
     const publishedDate = new Date(item.publishedAt).toLocaleDateString('ko-KR', {
       year: 'numeric',
       month: 'long',
@@ -167,7 +216,6 @@ function displayContent(items) {
       minute: '2-digit'
     });
     
-    // 뉴스 카드 클릭 이벤트 추가
     newsCard.addEventListener('click', () => {
       handleContentClick(item.id, 'NEWS', item.url);
     });
@@ -189,13 +237,13 @@ function displayContent(items) {
   blogItems.forEach(item => {
     const blogCard = document.createElement('div');
     blogCard.className = 'blog-card';
+    
     const publishedDate = new Date(item.publishedAt).toLocaleDateString('ko-KR', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
     
-    // 블로그 카드 클릭 이벤트 추가
     blogCard.addEventListener('click', () => {
       handleContentClick(item.id, 'BLOG', item.url);
     });
@@ -209,6 +257,14 @@ function displayContent(items) {
     blogContainer.appendChild(blogCard);
   });
 }
+
+// 페이지 언로드 시 이벤트 리스너 제거
+window.addEventListener('unload', () => {
+  // 모든 콘텐츠 추적 중지
+  Object.keys(contentViewTimers).forEach(contentId => {
+    stopContentViewTracking(contentId);
+  });
+});
 
 // 페이지 로드 시 초기 데이터 가져오기
 document.addEventListener('DOMContentLoaded', () => {
