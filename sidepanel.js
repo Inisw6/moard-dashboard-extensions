@@ -1,6 +1,6 @@
 async function fetchContent(query) {
   try {
-    const response = await fetch(`http://localhost:8000/content/search/${encodeURIComponent(query)}?max_results=3`, {
+    const response = await fetch(`http://localhost:8080/api/v1/search-queries/${query}?max_results=3`, {
       headers: {
         'accept': 'application/json'
       }
@@ -81,30 +81,27 @@ function displayContent(items) {
   const youtubeContainer = document.getElementById('youtube-container');
   youtubeContainer.innerHTML = '';
   
-  const youtubeItems = items.filter(item => item.type === 'youtube').slice(0, 2); // 최대 2개 영상 표시
+  const youtubeItems = items.filter(item => item.type === 'YOUTUBE').slice(0, 2); // 최대 2개 영상 표시
   youtubeItems.forEach(video => {
     const videoCard = document.createElement('div');
     videoCard.className = 'youtube-card';
     
-    // YouTube 영상 ID 추출
-    const videoId = video.url.split('v=')[1];
-    const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
-    
     videoCard.innerHTML = `
       <a href="${video.url}" target="_blank" class="youtube-link">
         <div class="thumbnail-container">
-          <img src="${thumbnailUrl}" alt="${video.title}" class="thumbnail">
+          <img src="${video.imageUrl}" alt="${video.title}" class="thumbnail">
           <div class="play-button">▶</div>
         </div>
         <div class="video-info">
           <h3 class="video-title">${video.title}</h3>
+          <p class="summary">${video.description}</p>
         </div>
       </a>
     `;
     
     // 클릭 이벤트 추가
     videoCard.addEventListener('click', () => {
-      handleContentClick(video.id, 'youtube', video.url);
+      handleContentClick(video.id, 'YOUTUBE', video.url);
     });
     
     youtubeContainer.appendChild(videoCard);
@@ -114,25 +111,27 @@ function displayContent(items) {
   const newsContainer = document.getElementById('news-container');
   newsContainer.innerHTML = '';
   
-  const newsItems = items.filter(item => item.type === 'news');
+  const newsItems = items.filter(item => item.type === 'NEWS');
   newsItems.forEach(item => {
     const newsCard = document.createElement('div');
     newsCard.className = 'news-card';
-    const publishedDate = new Date(item.published_at).toLocaleDateString('ko-KR', {
+    const publishedDate = new Date(item.publishedAt).toLocaleDateString('ko-KR', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
     
     // 뉴스 카드 클릭 이벤트 추가
     newsCard.addEventListener('click', () => {
-      handleContentClick(item.id, 'news', item.url);
+      handleContentClick(item.id, 'NEWS', item.url);
     });
     
     newsCard.innerHTML = `
       <span class="content-type news">뉴스</span>
       <a href="${item.url}" target="_blank">${item.title}</a>
-      <p class="summary">${item.summary}</p>
+      <p class="summary">${item.description}</p>
       <div class="published-at">${publishedDate}</div>
     `;
     newsContainer.appendChild(newsCard);
@@ -142,11 +141,11 @@ function displayContent(items) {
   const blogContainer = document.getElementById('blog-container');
   blogContainer.innerHTML = '';
   
-  const blogItems = items.filter(item => item.type === 'blog');
+  const blogItems = items.filter(item => item.type === 'BLOG');
   blogItems.forEach(item => {
     const blogCard = document.createElement('div');
     blogCard.className = 'blog-card';
-    const publishedDate = new Date(item.published_at).toLocaleDateString('ko-KR', {
+    const publishedDate = new Date(item.publishedAt).toLocaleDateString('ko-KR', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -154,13 +153,13 @@ function displayContent(items) {
     
     // 블로그 카드 클릭 이벤트 추가
     blogCard.addEventListener('click', () => {
-      handleContentClick(item.id, 'blog', item.url);
+      handleContentClick(item.id, 'BLOG', item.url);
     });
     
     blogCard.innerHTML = `
       <span class="content-type blog">블로그</span>
       <a href="${item.url}" target="_blank">${item.title}</a>
-      <p class="summary">${item.summary}</p>
+      <p class="summary">${item.description}</p>
       <div class="published-at">${publishedDate}</div>
     `;
     blogContainer.appendChild(blogCard);
