@@ -7,16 +7,20 @@
     "sidePanel",
     "tabs",
     "scripting",
-    "storage"
+    "storage",
+    "webNavigation",
+    "activeTab"
   ],
   "host_permissions": [
-    "https://finance.naver.com/*"
+    "https://finance.naver.com/*",
+    "https://*.naver.com/*"
   ],
   "side_panel": {
     "default_path": "sidepanel.html"
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "action": {
     "default_title": "Moard"

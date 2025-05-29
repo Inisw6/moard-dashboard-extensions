@@ -165,6 +165,12 @@ function handleContentClick(contentId, contentType, url) {
     logged_at: new Date().toISOString()
   };
   
+  // 링크 클릭 이벤트를 background.js로 전송
+  chrome.runtime.sendMessage({
+    type: 'LINK_CLICKED',
+    url: url
+  });
+  
   sendAnalyticsData(clickData);
   sendUserLog('CLICK', contentId);
 }
