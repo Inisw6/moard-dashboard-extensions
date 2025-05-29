@@ -15,15 +15,59 @@ async function fetchContent(query) {
 // 클라이언트 UID 생성 및 저장
 let clientUid = null;
 
-// chrome.storage.local에서 client_uid 가져오기
-chrome.storage.local.get(['clientUid'], function(result) {
+async function checkUserExists(uuid) {
+  try {
+    const response = await fetch(`http://localhost:8080/api/v1/users?uuid=${uuid}`, {
+      method: 'GET',
+      headers: {
+        'accept': '*/*'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('사용자 확인 중 오류가 발생했습니다');
+    }
+    
+    const data = await response.json();
+    return data !== null;
+  } catch (error) {
+    console.error('사용자 확인 중 오류 발생:', error);
+    return false;
+  }
+}
+
+async function registerUser(uuid) {
+  try {
+    const response = await fetch('http://localhost:8080/api/v1/users', {
+      method: 'POST',
+      headers: {
+        'accept': '*/*',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(uuid)
+    });
+    
+    if (!response.ok) {
+      throw new Error('사용자 등록에 실패했습니다');
+    }
+    console.log('사용자가 성공적으로 등록되었습니다');
+  } catch (error) {
+    console.error('사용자 등록 중 오류 발생:', error);
+  }
+}
+
+chrome.storage.local.get(['clientUid'], async function(result) {
   if (result.clientUid) {
     clientUid = result.clientUid;
+    // 기존 사용자 ID가 있는 경우에도 서버에 존재하는지 확인
+    const exists = await checkUserExists(clientUid);
+    if (!exists) {
+      await registerUser(clientUid);
+    }
   } else {
-    // 새로운 client_uid 생성
     clientUid = crypto.randomUUID();
-    // chrome.storage.local에 저장
     chrome.storage.local.set({ clientUid: clientUid });
+    await registerUser(clientUid);
   }
 });
 
