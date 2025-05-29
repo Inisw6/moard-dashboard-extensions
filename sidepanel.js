@@ -122,6 +122,12 @@ async function sendAnalyticsData(data) {
 // 사용자 로그 데이터 전송 함수
 async function sendUserLog(eventType, contentId) {
   try {
+    // contentId가 null이면 로그 전송하지 않음
+    if (!contentId) {
+      console.log('contentId가 없어 로그를 전송하지 않습니다.');
+      return;
+    }
+
     if (!clientUid) {
       await new Promise(resolve => {
         const checkUid = setInterval(() => {
@@ -139,6 +145,8 @@ async function sendUserLog(eventType, contentId) {
       contentId: contentId,
       timestamp: new Date().toISOString()
     };
+
+    console.log('로그 전송:', logData);
 
     const response = await fetch('http://localhost:8080/api/v1/user-log', {
       method: 'POST',
