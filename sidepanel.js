@@ -119,8 +119,59 @@ async function sendAnalyticsData(data) {
   }
 }
 
-// 사용자 로그 데이터 전송 함수
-async function sendUserLog(eventType, contentId) {
+// 콘텐츠 조회 시간 추적을 위한 변수
+let contentViewStartTime = null;
+let contentViewTimers = {};
+
+// 콘텐츠 조회 시작
+function startContentViewTracking(contentId) {
+  if (!contentId) return;
+  
+  console.log('콘텐츠 조회 시작:', contentId);
+  contentViewStartTime = Date.now();
+  contentViewTimers[contentId] = contentViewStartTime;
+}
+
+// 콘텐츠 조회 종료 및 로그 전송
+function stopContentViewTracking(contentId) {
+  if (!contentId || !contentViewTimers[contentId]) return;
+
+  const viewTime = Date.now() - contentViewTimers[contentId];
+  console.log('콘텐츠 조회 종료:', contentId, '체류시간:', viewTime);
+
+  // VIEW 이벤트 로그 전송
+  sendUserLog('VIEW', contentId, {
+    time: viewTime,
+    ratio: 0.1  // 기본값 설정
+  });
+
+  // 타이머 제거
+  delete contentViewTimers[contentId];
+}
+
+// 콘텐츠 클릭 이벤트 핸들러
+function handleContentClick(contentId, contentType, url) {
+  const clickData = {
+    content_id: contentId,
+    clicked: true,
+    logged_at: new Date().toISOString()
+  };
+  
+  // 링크 클릭 이벤트를 background.js로 전송
+  chrome.runtime.sendMessage({
+    type: 'LINK_CLICKED',
+    url: url
+  });
+  
+  sendAnalyticsData(clickData);
+  sendUserLog('CLICK', contentId);
+  
+  // 콘텐츠 조회 시작
+  startContentViewTracking(contentId);
+}
+
+// sendUserLog 함수 수정
+async function sendUserLog(eventType, contentId, additionalData = {}) {
   try {
     // contentId가 null이면 로그 전송하지 않음
     if (!contentId) {
@@ -143,7 +194,8 @@ async function sendUserLog(eventType, contentId) {
       userId: clientUid,
       eventType: eventType,
       contentId: contentId,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      ...additionalData
     };
 
     console.log('로그 전송:', logData);
@@ -163,24 +215,6 @@ async function sendUserLog(eventType, contentId) {
   } catch (error) {
     console.error('로그 데이터 전송 중 오류 발생:', error);
   }
-}
-
-// 콘텐츠 클릭 이벤트 핸들러
-function handleContentClick(contentId, contentType, url) {
-  const clickData = {
-    content_id: contentId,
-    clicked: true,
-    logged_at: new Date().toISOString()
-  };
-  
-  // 링크 클릭 이벤트를 background.js로 전송
-  chrome.runtime.sendMessage({
-    type: 'LINK_CLICKED',
-    url: url
-  });
-  
-  sendAnalyticsData(clickData);
-  sendUserLog('CLICK', contentId);
 }
 
 function displayContent(items) {
