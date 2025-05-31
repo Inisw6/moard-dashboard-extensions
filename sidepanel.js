@@ -122,6 +122,7 @@ async function sendAnalyticsData(data) {
 // 콘텐츠 조회 시간 추적을 위한 변수
 let contentViewStartTime = null;
 let contentViewTimers = {};
+let currentRecommendationId = null;
 
 // 콘텐츠 조회 시작
 function startContentViewTracking(contentId) {
@@ -142,7 +143,8 @@ function stopContentViewTracking(contentId) {
   // VIEW 이벤트 로그 전송
   sendUserLog('VIEW', contentId, {
     time: viewTime,
-    ratio: 0.1  // 기본값 설정
+    ratio: 0.1,
+    recommendationId: currentRecommendationId
   });
 
   // 타이머 제거
@@ -164,7 +166,9 @@ function handleContentClick(contentId, contentType, url) {
   });
   
   sendAnalyticsData(clickData);
-  sendUserLog('CLICK', contentId);
+  sendUserLog('CLICK', contentId, {
+    recommendationId: currentRecommendationId
+  });
   
   // 콘텐츠 조회 시작
   startContentViewTracking(contentId);
@@ -194,6 +198,7 @@ async function sendUserLog(eventType, contentId, additionalData = {}) {
       userId: clientUid,
       eventType: eventType,
       contentId: contentId,
+      recommendationId: currentRecommendationId,
       timestamp: new Date().toISOString(),
       ...additionalData
     };
@@ -218,6 +223,9 @@ async function sendUserLog(eventType, contentId, additionalData = {}) {
 }
 
 function displayContent(recommendation) {
+  // 현재 추천 ID 저장
+  currentRecommendationId = recommendation.id;
+  
   const container = document.getElementById('content-container');
   container.innerHTML = '';
 
