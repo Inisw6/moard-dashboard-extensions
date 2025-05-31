@@ -304,6 +304,44 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
+// 주식 종목 로그 전송 함수
+async function sendStockLog(stockName) {
+  try {
+    if (!clientUid) {
+      await new Promise(resolve => {
+        const checkUid = setInterval(() => {
+          if (clientUid) {
+            clearInterval(checkUid);
+            resolve();
+          }
+        }, 100);
+      });
+    }
+
+    const logData = {
+      stockName: stockName,
+      userId: clientUid
+    };
+
+    console.log('주식 종목 로그 전송:', logData);
+
+    const response = await fetch('http://localhost:8080/api/v1/stock-log', {
+      method: 'POST',
+      headers: {
+        'accept': '*/*',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(logData)
+    });
+
+    if (!response.ok) {
+      throw new Error('주식 종목 로그 전송 실패');
+    }
+  } catch (error) {
+    console.error('주식 종목 로그 전송 중 오류 발생:', error);
+  }
+}
+
 // 주식 정보 가져오기 함수
 async function fetchStockInfo(tabId) {
   try {
@@ -317,6 +355,9 @@ async function fetchStockInfo(tabId) {
 
     if (results && results[0] && results[0].result) {
       const stockName = results[0].result;
+      // 주식 종목 로그 전송
+      await sendStockLog(stockName);
+      // 콘텐츠 가져오기
       fetchContent(stockName);
     }
   } catch (error) {
