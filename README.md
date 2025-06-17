@@ -1,5 +1,7 @@
 # moard-dashboard-extensions
-이 프로젝트는 금융 페이지에서 주식 정보를 쉽게 확인할 수 있는 크롬 확장 프로그램입니다.
+이 프로젝트는 Moard의 크롬 확장 기반 사이드 패널 입니다.
+
+<img width="270" alt="스크린샷 2025-06-17 오후 3 46 46" src="https://github.com/user-attachments/assets/a4db2e10-6e4a-42dd-ba23-02ca83f31153" />
 
 ## 개요
 
